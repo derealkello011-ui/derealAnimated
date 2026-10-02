@@ -1,9 +1,10 @@
+import CustomButton from "@/components/CustomButton";
+import Pagination from "@/components/Pagination";
 import RenderItem from "@/components/RenderItem";
 import data, { OnboardingData } from "@/data/data";
 import { FlatList, View, ViewToken } from "react-native";
 import Animated, { useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import "../global.css";
-import Pagination from "@/components/Pagination";
 
 export default function Index() {
   const flatlistRef = useAnimatedRef<FlatList<OnboardingData>>();
@@ -48,8 +49,14 @@ export default function Index() {
           viewAreaCoveragePercentThreshold: 10
         }}
       />
-      <View className="right-0 bottom-0 left-0 absolute mr-7 ml-7 pt-7 pb-7">
+      <View className="right-0 bottom-0 left-0 absolute flex-row justify-between items-center mr-7 ml-7 pt-7 pb-7">
         <Pagination data={data} x={x} />
+        <CustomButton
+          flatlistRef={flatlistRef}
+          flatlistIndex={flatlistIndex}
+          dataLength={data.length}
+          x={x}
+        />
       </View>
     </View>
   );

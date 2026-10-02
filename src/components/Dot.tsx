@@ -1,5 +1,5 @@
 import { StyleSheet, useWindowDimensions } from 'react-native';
-import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { Extrapolation, interpolate, interpolateColor, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 type Props = {
     index: number;
@@ -15,7 +15,7 @@ const Dot = ( { index, x }: Props ) => {
             [
                 ( index - 1 ) * SCREEN_WIDTH,
                 index * SCREEN_WIDTH,
-                (index + 1) * SCREEN_WIDTH,
+                ( index + 1 ) * SCREEN_WIDTH,
             ],
             [ 10, 20, 10 ],
             Extrapolation.CLAMP
@@ -26,7 +26,7 @@ const Dot = ( { index, x }: Props ) => {
             [
                 ( index - 1 ) * SCREEN_WIDTH,
                 index * SCREEN_WIDTH,
-                (index + 1) * SCREEN_WIDTH,
+                ( index + 1 ) * SCREEN_WIDTH,
             ],
             [ 0.5, 1, 0.5 ],
             Extrapolation.CLAMP
@@ -35,11 +35,21 @@ const Dot = ( { index, x }: Props ) => {
             width: widthAnimation,
             opacity: opacityAnimation
         };
+    } );
+    const animatedColor = useAnimatedStyle( () => {
+        const backgroundColor = interpolateColor(
+            x.value,
+            [ 0, SCREEN_WIDTH, 2 * SCREEN_WIDTH ],
+            [ '#005b4f', '#1e2169', '#f15937' ],
+        );
+        return {
+            backgroundColor: backgroundColor,
+        }
     })
   return (
       <Animated.View
-          className='bg-black mr-3 ml-3 border rounded w-3 h-3'
-          style={[animatedDotStyle]}
+          className='mr-3 ml-3 border rounded w-3 h-3'
+          style={[animatedDotStyle, animatedColor]}
       />
   )
 }
