@@ -1,59 +1,36 @@
-import { StyleSheet, useWindowDimensions } from 'react-native';
-import Animated, { Extrapolation, interpolate, interpolateColor, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { useWindowDimensions } from 'react-native';
+import Animated, {
+    Extrapolation,
+    interpolate,
+    interpolateColor,
+    SharedValue,
+    useAnimatedStyle,
+} from 'react-native-reanimated';
 
 type Props = {
-    index: number;
-    x: SharedValue<number>;
-}
+  index: number;
+  x: SharedValue<number>;
+  colors: string[]; // one color per slide, in slide order
+};
 
-const Dot = ( { index, x }: Props ) => {
-    const { width: SCREEN_WIDTH } = useWindowDimensions();
-    
-    const animatedDotStyle = useAnimatedStyle( () => {
-        const widthAnimation = interpolate(
-            x.value,
-            [
-                ( index - 1 ) * SCREEN_WIDTH,
-                index * SCREEN_WIDTH,
-                ( index + 1 ) * SCREEN_WIDTH,
-            ],
-            [ 10, 20, 10 ],
-            Extrapolation.CLAMP
-        );
+const Dot = ( { index, x, colors }: Props ) => {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
 
-        const opacityAnimation = interpolate(
-            x.value,
-            [
-                ( index - 1 ) * SCREEN_WIDTH,
-                index * SCREEN_WIDTH,
-                ( index + 1 ) * SCREEN_WIDTH,
-            ],
-            [ 0.5, 1, 0.5 ],
-            Extrapolation.CLAMP
-        );
-        return {
-            width: widthAnimation,
-            opacity: opacityAnimation
-        };
-    } );
-    const animatedColor = useAnimatedStyle( () => {
-        const backgroundColor = interpolateColor(
-            x.value,
-            [ 0, SCREEN_WIDTH, 2 * SCREEN_WIDTH ],
-            [ '#005b4f', '#1e2169', '#f15937' ],
-        );
-        return {
-            backgroundColor: backgroundColor,
-        }
-    })
-  return (
-      <Animated.View
-          className='mr-3 ml-3 border rounded w-3 h-3'
-          style={[animatedDotStyle, animatedColor]}
-      />
-  )
-}
+  const pageRange = [
+    ( index - 1 ) * SCREEN_WIDTH,
+    index * SCREEN_WIDTH,
+    ( index + 1 ) * SCREEN_WIDTH,
+  ];
+  // One stop per slide, so the color follows every slide (not just the first 3)
+  const colorRange = colors.map( ( _, i ) => i * SCREEN_WIDTH );
 
-export default Dot
+  const animatedDotStyle = useAnimatedStyle( () => ( {
+    width: interpolate( x.get(), pageRange, [ 10, 20, 10 ], Extrapolation.CLAMP ),
+    opacity: interpolate( x.get(), pageRange, [ 0.5, 1, 0.5 ], Extrapolation.CLAMP ),
+    backgroundColor: interpolateColor( x.get(), colorRange, colors ),
+  } ) );
 
-const styles = StyleSheet.create({})
+  return <Animated.View className='mx-1.5 rounded-full h-2.5' style={animatedDotStyle} />;
+};
+
+export default Dot;

@@ -1,95 +1,89 @@
 import { OnboardingData } from '@/data/data';
-import { FlatList, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
-import Animated, { AnimatedRef, interpolateColor, SharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
+import { FlatList, Pressable, useWindowDimensions } from 'react-native';
+import Animated, {
+    AnimatedRef,
+    interpolateColor,
+    SharedValue,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+} from 'react-native-reanimated';
 
 interface Props {
-    flatlistRef: AnimatedRef<FlatList<OnboardingData>>;
-    dataLength: number;
-    flatlistIndex: SharedValue<number>;
-    x: SharedValue<number>;
+  flatlistRef: AnimatedRef<FlatList<OnboardingData>>;
+  flatlistIndex: SharedValue<number>;
+  dataLength: number;
+  colors: string[]; // one color per slide, in slide order
+  x: SharedValue<number>;
+  onFinish: () => void;
 }
 
-const CustomButton = ( { 
-    dataLength, 
-    flatlistIndex, 
-    flatlistRef,
-    x,
-}: Props ) => {
-    const { width: SCREEN_WIDTH } = useWindowDimensions();
+const CustomButton = ( { flatlistRef, flatlistIndex, dataLength, colors, x, onFinish }: Props ) => {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const colorRange = colors.map( ( _, i ) => i * SCREEN_WIDTH );
 
-    const buttonAnimationStyle = useAnimatedStyle( () => {
-        return {
-            width: flatlistIndex.value === dataLength - 1
-                ? withSpring( 140 )
-                : withSpring( 60 ),
-            height: 60,
-        }
-    } );
+  // The button itself: grows into a pill on the last slide and follows the slide color
+  const buttonStyle = useAnimatedStyle( () => {
+    const isLast = flatlistIndex.get() === dataLength - 1;
+    return {
+      width: withSpring( isLast ? 140 : 60 ),
+      height: 60,
+      backgroundColor: interpolateColor( x.get(), colorRange, colors ),
+    };
+  } );
 
-    const textAnimationStyle = useAnimatedStyle( () => { 
-        return {
-            opacity: flatlistIndex.value === dataLength - 1 
-                ? withTiming( 1 ) : withTiming( 0 ),
-            transform: [ {
-                translateX: flatlistIndex.value === dataLength - 1 
-                    ? withTiming( 0 )
-                    : withTiming(-100)
-            }]
-        }
-    } );
+  // "Get Started" slides in on the last slide
+  const textStyle = useAnimatedStyle( () => {
+    const isLast = flatlistIndex.get() === dataLength - 1;
+    return {
+      opacity: withTiming( isLast ? 1 : 0 ),
+      transform: [ { translateX: withTiming( isLast ? 0 : -100 ) } ],
+    };
+  } );
 
-    const animatedColor = useAnimatedStyle( () => {
-        const backgroundColor = interpolateColor(
-            x.value,
-            [ 0, SCREEN_WIDTH, 2 * SCREEN_WIDTH ],
-            [ '#005b4f', '#1e2169', '#f15937' ]
-        );
-        return {
-            backgroundColor: backgroundColor,
-        }
-    } );
+  // The arrow slides out on the last slide
+  const arrowStyle = useAnimatedStyle( () => {
+    const isLast = flatlistIndex.get() === dataLength - 1;
+    return {
+      opacity: withTiming( isLast ? 0 : 1 ),
+      transform: [ { translateX: withTiming( isLast ? 100 : 0 ) } ],
+    };
+  } );
 
-    const arrowAnimationStyle = useAnimatedStyle( () => {
-        return {
-            width: 30,
-            height: 30,
-            opacity: flatlistIndex.value === dataLength - 1 ? withTiming( 0 ) : withTiming( 1 ),
-            transform: [
-                {
-                    translateX: flatlistIndex.value === dataLength - 1
-                        ? withTiming( 100 ) 
-                        : withTiming(0),
-                }
-            ]
-        }
-    })
+  const handlePress = () => {
+    const current = flatlistIndex.get();
+
+    if ( current < dataLength - 1 ) {
+      flatlistRef.current?.scrollToIndex( { index: current + 1 } );
+    } else {
+      onFinish();
+    }
+  };
 
   return (
-      <TouchableWithoutFeedback
-          onPress={() => {
-              if ( flatlistIndex.value < dataLength - 1 ) {
-                  flatlistRef.current?.scrollToIndex({index: flatlistIndex.value + 1 })
-              }
-              else {
-                  console.log( "NAVIGATE TO NEXT SCREEN" );
-              }
-        }}
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole='button'
+      accessibilityLabel='Next'
+    >
+      <Animated.View
+        className='justify-center items-center rounded-full overflow-hidden'
+        style={buttonStyle}
       >
-          <Animated.View
-              className='justify-center items-center py-px rounded-full w-13 h-13 overflow-hidden'
-              style={[ animatedColor, buttonAnimationStyle, arrowAnimationStyle ]}
-          >
-              <Animated.Text className='absolute text-white text-lg' style={[textAnimationStyle]}>
-                  Get Started
-              </Animated.Text>
-              <Animated.Image
-                  source={require( '@/assets/images/addMessage.png' )}
-                    className='absolute w-12 h-12'
-              />
-              {/* <Ionicons name='arrow-forward-sharp' size={30} color="white"  /> */}
-          </Animated.View>
-   </TouchableWithoutFeedback>
-  )
-}
+        <Animated.Text
+          numberOfLines={1}
+          className='absolute font-semibold text-white text-lg'
+          style={textStyle}
+        >
+          Get Started
+        </Animated.Text>
+        <Animated.View className='absolute' style={arrowStyle}>
+          <Ionicons name='arrow-forward-sharp' size={30} color='white' />
+        </Animated.View>
+      </Animated.View>
+    </Pressable>
+  );
+};
 
-export default CustomButton
+export default CustomButton;
