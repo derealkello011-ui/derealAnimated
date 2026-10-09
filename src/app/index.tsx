@@ -2,6 +2,7 @@ import CustomButton from '@/components/CustomButton';
 import Pagination from '@/components/Pagination';
 import RenderItem from '@/components/RenderItem';
 import data, { OnboardingData } from '@/data/data';
+import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, useWindowDimensions, View, ViewToken } from 'react-native';
 import Animated, {
@@ -42,7 +43,7 @@ export default function Index() {
 
   const handleFinish = () => {
     // TODO: replace with router.replace('/(tabs)') once that route exists
-    console.log( 'NAVIGATE TO NEXT SCREEN' );
+    router.replace( '/HomeScreen' );
   };
 
   return (
